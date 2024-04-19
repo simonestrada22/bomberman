@@ -1,49 +1,26 @@
 # entities/entity.py
 
+import time
+from items.bomb import Bomb
+
 class Entity:
-    def __init__(self, node):
+    def __init__(self, node, lives=3):
         self.node = node
-        self.lives = 3
-        self.velocity = 1
-        self.shield_active = False
-        self.bomb_range = 1
-        self.bombs_left = 1
+        self.lives = lives
+        self.last_bomb_time = 0
 
     def move(self, direction):
-        # Update entity position based on the direction of movement
+        neighbor = self.node.neighbors[direction]
+        if neighbor and neighbor.state != 'wall' and neighbor.state != 'barrier':
+            self.node.entity = None
+            self.node = neighbor
+            neighbor.entity = self
 
-        if direction == "up" and self.node.up:
-            self.node = self.node.up
-        elif direction == "down" and self.node.down:
-            self.node = self.node.down
-        elif direction == "left" and self.node.left:
-            self.node = self.node.left
-        elif direction == "right" and self.node.right:
-            self.node = self.node.right
-
-    def place_bomb(self):
-        # Place a bomb at the entity current position
-        pass
-
-    def take_damage(self):
-        # Reduce player's lives when hit by a bomb explosion
-        self.lives -= 1
-
-    def activate_shield(self):
-        # Activate shield power-up
-        self.shield_active = True
-
-    def deactivate_shield(self):
-        # Deactivate shield power-up
-        self.shield_activate = False
-
-    def increase_bomb_range(self):
-        # Increase bomb range when picking up power-up
-        self.bomb_range += 1
-
-    def increase_velocity(self):
-        # Increase player velocity when picking up power-up
-        self.velocity += 1
-
-    def increase_bomb_capacity(self):
-        self.bombs_left += 1
+    def place_bomb(self, map_obj):
+        current_time = time.time()
+        if current_time - self.last_bomb_time >= 3:
+            bomb = Bomb(self.node)
+            map_obj.add_item(bomb)
+            self.last_bomb_time = current_time
+            # Set bomb explosion frames
+            bomb.set_explosion_frames(current_time)
