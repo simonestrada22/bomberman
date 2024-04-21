@@ -88,7 +88,7 @@ def start_game(stdscr, player_name):
     game_map.add_entity(player)
 
     # Create enemies
-    num_enemies = 0
+    num_enemies = 4
     for _ in range(num_enemies):
         enemy_node = game_map.get_random_free_node()
         enemy = Enemy(enemy_node, lives=2)
@@ -188,7 +188,7 @@ def explode_bomb(bomb, game_map):
         neighbor = node.neighbors[direction]
         if neighbor and neighbor.state == "barrier":
             neighbor.state = "free"
-            if random.random() < 0.1:
+            if random.random() < 0.05:
                 powerup = Powerup(neighbor)
                 game_map.add_item(powerup)
         if neighbor and neighbor.entity:
@@ -203,6 +203,7 @@ def explode_bomb(bomb, game_map):
 
     game_map.items.remove(bomb)
     bomb.node.item = None
+    bomb.placed_by.decrease_active_bombs(bomb)
 
 
 def kill_entity(entity, game_map, node):
@@ -257,12 +258,13 @@ def game_stats(stdscr, player, game_map, start_time, current_time, enemies, bomb
 
     stdscr.addstr(game_map.rows + 3, 0, f"{player.name}'s Position: ({player.node.row}, {player.node.col})")
     stdscr.addstr(game_map.rows + 4, 0, f"{player.name}'s Lives: {player.lives}")
+    stdscr.addstr(game_map.rows + 5, 0, f"{player.name}'s Bombs: {player.max_bombs - len(player.active_bombs)}")
 
     for i, enemy in enumerate(enemies):
-        stdscr.addstr(game_map.rows + 6 + i, 0, f"Enemy {i+1} Lives: {enemy.lives}")
+        stdscr.addstr(game_map.rows + 7 + i, 0, f"Enemy {i+1} Lives: {enemy.lives}")
 
     for i, bomb in enumerate(bombs):
-        stdscr.addstr(game_map.rows + 7 + len(enemies) + i, 0, f"Bomb {i+1} Position: ({bomb.node.row}, {bomb.node.col})")
+        stdscr.addstr(game_map.rows + 8 + len(enemies) + i, 0, f"Bomb {i+1} Position: ({bomb.node.row}, {bomb.node.col})")
 
 def render_game(stdscr, game_map, player, start_time):
     stdscr.clear()
@@ -290,11 +292,8 @@ def render_game(stdscr, game_map, player, start_time):
                         elapsed_time = current_time - bomb.placement_time
                         frame_index = int(elapsed_time / 0.2) % len(bomb.explosion_frames)
                         stdscr.addstr(row, col, bomb.explosion_frames[frame_index], curses.color_pair(3))
-                        if frame_index == len(bomb.explosion_frames) - 1:
-                            node.item = None
                     else:
                         stdscr.addstr(row, col, '💣', curses.color_pair(3))
-
                 elif isinstance(node.item, Powerup):
                     stdscr.addstr(row, col, 'o', curses.color_pair(4))
                 else:

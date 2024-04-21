@@ -9,7 +9,7 @@ class Entity:
         self.lives = lives
         self.last_bomb_time = 0
         self.max_bombs = 1
-        self.active_bombs = 1
+        self.active_bombs = []
 
     def move(self, direction):
         neighbor = self.node.neighbors[direction]
@@ -20,9 +20,13 @@ class Entity:
 
     def place_bomb(self, map_obj):
         current_time = time.time()
-        if current_time - self.last_bomb_time >= 3:
-            bomb = Bomb(self.node)
+        # Check if the number of active bombs is less than the max bombs
+        if len(self.active_bombs) < self.max_bombs:
+            bomb = Bomb(self.node, self)
             map_obj.add_item(bomb)
             self.last_bomb_time = current_time
-            # Set bomb explosion frames
             bomb.set_explosion_frames(current_time)
+            self.active_bombs.append(bomb)
+
+    def decrease_active_bombs(self, bomb):
+        self.active_bombs.remove(bomb)

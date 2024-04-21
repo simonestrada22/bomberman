@@ -4,6 +4,7 @@ from random import choice
 from items.bomb import Bomb
 from entities.entity import Entity
 from entities.player import Player
+from items.powerup import Powerup
 
 class Enemy(Entity):
     def __init__(self, node, lives=2):
@@ -14,7 +15,10 @@ class Enemy(Entity):
         valid_directions = []
         for direction in self.directions:
             neighbor = self.node.neighbors[direction]
-            if neighbor and neighbor.state != 'wall' and not neighbor.entity and not (isinstance(neighbor.item, Bomb)):
+            if (neighbor and 
+                neighbor.state != 'wall' and not 
+                neighbor.entity and not 
+                (isinstance(neighbor.item, Bomb))) or (isinstance(neighbor.item, Powerup)):
                 valid_directions.append(direction)
 
         if valid_directions:

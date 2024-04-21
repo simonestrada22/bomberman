@@ -4,10 +4,11 @@ import time
 from items.item import Item
 
 class Bomb(Item):
-    def __init__(self, node):
+    def __init__(self, node, entity):
         super().__init__(node)
         self.placement_time = time.time()  # Store the time when the bomb was placed
         self.explosion_frames = []
+        self.placed_by = entity
 
     def set_explosion_frames(self, placement_time):
         self.placement_time = placement_time
@@ -17,4 +18,3 @@ class Bomb(Item):
     def should_explode(self):
         current_time = time.time()
         return current_time - self.placement_time >= 3 and self.explosion_frames
-    
