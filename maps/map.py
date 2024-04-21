@@ -77,6 +77,16 @@ class Map:
                 return node
             current_node = current_node.next
         return None
+    
+    def get_random_free_node(self):
+        current_node = self.map_list.head
+        free_nodes = []
+        while current_node:
+            node = current_node.node
+            if node.state == 'free' and not node.entity and not node.item:
+                free_nodes.append(node)
+            current_node = current_node.next
+        return random.choice(free_nodes) if free_nodes else None
 
     def print_map(self):
         current_node = self.map_list.head

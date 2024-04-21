@@ -14,9 +14,6 @@ class Bomb(Item):
         # self.explosion_frames = ['*', '+', 'x', '.', ' ']
         self.explosion_frames = ['💥', '💣', ' ']
 
-    def tick(self):
-        pass  # You can implement ticking functionality if needed
-
     def should_explode(self):
         current_time = time.time()
         return current_time - self.placement_time >= 3 and self.explosion_frames
