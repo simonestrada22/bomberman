@@ -1,10 +1,14 @@
+# main.py
+
 import os
-import curses
-import time
 import csv
+import time
+import curses
+import random
 from entities.enemy import Enemy
 from entities.player import Player
 from items.bomb import Bomb
+from items.powerup import Powerup
 from maps.map import Map
 
 SCOREBOARD_FILE = "scoreboard.csv"
@@ -15,6 +19,8 @@ def init_game(stdscr):
     curses.start_color()
     curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_BLACK)  # Wall color pair
     curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)  # Barrier color pair
+    curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)  # Bomb color pair
+    curses.init_pair(4, curses.COLOR_RED, curses.COLOR_BLACK)  # Powerup color pair
 
     HEIGHT, WIDTH = stdscr.getmaxyx()
 
@@ -111,12 +117,42 @@ def start_game(stdscr, player_name):
         if not any(isinstance(entity, Enemy) for entity in game_map.entities):
             elapsed_time = time.time() - start_time
             save_score(player.name, elapsed_time)
+            quit()
 
 
 def save_score(player_name, elapsed_time):
-    with open(SCOREBOARD_FILE, "a", newline='') as f:
+    scores = []
+    updated = False
+
+    # Read existing scores
+    if os.path.exists(SCOREBOARD_FILE):
+        with open(SCOREBOARD_FILE, "r") as f:
+            reader = csv.reader(f)
+            for line in reader:
+                scores.append((line[0], float(line[1])))
+
+    # Check if the player exists in the scoreboard
+    for i, (name, time_played) in enumerate(scores):
+        if name == player_name:
+            # If the player's new time is less, update the score
+            if elapsed_time < time_played:
+                scores[i] = (player_name, elapsed_time)
+                updated = True
+            break
+
+    # If the player doesn't exist or the time was updated, rewrite the scoreboard
+    if not updated:
+        scores.append((player_name, elapsed_time))
+
+    # Sort the scores
+    scores.sort(key=lambda x: x[1])
+
+    # Write the updated scoreboard to the file
+    with open(SCOREBOARD_FILE, "w", newline='') as f:
         writer = csv.writer(f)
-        writer.writerow([player_name, elapsed_time])
+        for score in scores:
+            writer.writerow(score)
+
 
 def display_scoreboard(stdscr):
     stdscr.clear()
@@ -152,14 +188,22 @@ def explode_bomb(bomb, game_map):
         neighbor = node.neighbors[direction]
         if neighbor and neighbor.state == "barrier":
             neighbor.state = "free"
+            if random.random() < 0.1:
+                powerup = Powerup(neighbor)
+                game_map.add_item(powerup)
         if neighbor and neighbor.entity:
             kill_entity(neighbor.entity, game_map, neighbor)
 
     if node.entity:
         kill_entity(node.entity, game_map, node)
 
+
+    # if node.item and isinstance(node.item, Bomb):
+    #     node.item.node.entity.active_bombs -= 1
+
     game_map.items.remove(bomb)
     bomb.node.item = None
+
 
 def kill_entity(entity, game_map, node):
     if node.entity:
@@ -201,6 +245,11 @@ def handle_input(stdscr, player, game_map):
         if isinstance(item, Bomb):
             if item.should_explode():
                 explode_bomb(item, game_map)
+
+    for entity in game_map.entities:
+        if entity.node.item and isinstance(entity.node.item, Powerup):
+            entity.node.item.apply_powerup(entity)
+            entity.node.item = None
 
 def game_stats(stdscr, player, game_map, start_time, current_time, enemies, bombs):
     elapsed_time = current_time - start_time
@@ -245,6 +294,9 @@ def render_game(stdscr, game_map, player, start_time):
                             node.item = None
                     else:
                         stdscr.addstr(row, col, '💣', curses.color_pair(3))
+
+                elif isinstance(node.item, Powerup):
+                    stdscr.addstr(row, col, 'o', curses.color_pair(4))
                 else:
                     stdscr.addstr(row, col, '💣')
 

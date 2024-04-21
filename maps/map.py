@@ -1,4 +1,5 @@
 # maps/map.py
+from items.powerup import Powerup
 from utils.doubly_linked_list import DoublyLinkedList
 from utils.node import Node
 import random
@@ -31,6 +32,7 @@ class Map:
                 self.map_list.append(node)
 
         self.connect_neighbors()
+        self.place_powerups()
 
     def connect_neighbors(self):
         current_node = self.map_list.head
@@ -87,6 +89,13 @@ class Map:
                 free_nodes.append(node)
             current_node = current_node.next
         return random.choice(free_nodes) if free_nodes else None
+
+    def place_powerups(self):
+        for _ in range(int(self.rows * self.cols * 0.01)):
+            node = self.get_random_free_node()
+            if node:
+                powerup = Powerup(node)
+                self.add_item(powerup)
 
     def print_map(self):
         current_node = self.map_list.head

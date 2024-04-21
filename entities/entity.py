@@ -8,6 +8,8 @@ class Entity:
         self.node = node
         self.lives = lives
         self.last_bomb_time = 0
+        self.max_bombs = 1
+        self.active_bombs = 1
 
     def move(self, direction):
         neighbor = self.node.neighbors[direction]
