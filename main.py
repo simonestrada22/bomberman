@@ -183,6 +183,8 @@ def display_scoreboard(stdscr):
 
 def explode_bomb(bomb, game_map):
     node = bomb.node
+    explosion_frames = ['💥', '💣', ' ']
+    explosion_duration = 0.5  # Duration of the explosion in seconds
 
     for direction in node.neighbors:
         neighbor = node.neighbors[direction]
@@ -197,9 +199,7 @@ def explode_bomb(bomb, game_map):
     if node.entity:
         kill_entity(node.entity, game_map, node)
 
-
-    # if node.item and isinstance(node.item, Bomb):
-    #     node.item.node.entity.active_bombs -= 1
+    game_map.add_explosion(node, explosion_frames, bomb.placement_time, explosion_duration)
 
     game_map.items.remove(bomb)
     bomb.node.item = None
@@ -287,20 +287,27 @@ def render_game(stdscr, game_map, player, start_time):
                     stdscr.addstr(row, col, '🤖')
             elif node.item:
                 if isinstance(node.item, Bomb):
-                    bomb = node.item
-                    if bomb.should_explode():
-                        elapsed_time = current_time - bomb.placement_time
-                        frame_index = int(elapsed_time / 0.2) % len(bomb.explosion_frames)
-                        stdscr.addstr(row, col, bomb.explosion_frames[frame_index], curses.color_pair(3))
-                    else:
-                        stdscr.addstr(row, col, '💣', curses.color_pair(3))
+                    stdscr.addstr(row, col, '💣', curses.color_pair(3))
                 elif isinstance(node.item, Powerup):
                     stdscr.addstr(row, col, 'o', curses.color_pair(4))
                 else:
                     stdscr.addstr(row, col, '💣')
 
+    # Render active explosions and remove them after a certain duration
+    for explosion in game_map.explosions:
+        node = explosion['node']
+        frames = explosion['frames']
+        start_time = explosion['start_time']
+        duration = explosion['duration']
+        elapsed_time = current_time - start_time
+        frame_index = int(elapsed_time / 0.2) % len(frames)
+        stdscr.addstr(node.row, node.col, frames[frame_index], curses.color_pair(3))
+        if elapsed_time >= duration:
+            game_map.explosions.remove(explosion)
+
     game_stats(stdscr, player, game_map, start_time, current_time, enemies, bombs)
     stdscr.refresh()
+
 
 def main():
     if not os.path.exists(SCOREBOARD_FILE):

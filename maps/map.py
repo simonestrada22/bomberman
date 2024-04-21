@@ -11,6 +11,7 @@ class Map:
         self.map_list = DoublyLinkedList()
         self.entities = []
         self.items = []
+        self.explosions = []
         self.create_map()
 
     def create_map(self):
@@ -55,6 +56,14 @@ class Map:
                     node.add_neighbor('right', right)
 
             current_node = current_node.next
+
+    def add_explosion(self, node, explosion_frames, start_time, duration):
+        self.explosions.append({
+            'node': node,
+            'frames': explosion_frames,
+            'start_time': start_time,
+            'duration': duration
+        })
 
     def add_entity(self, entity):
         self.entities.append(entity)
