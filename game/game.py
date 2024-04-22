@@ -122,6 +122,7 @@ class Game:
                 quit()
 
     def handle_input(self, player, game_map):
+        self.stdscr.keypad(True)
         key = self.stdscr.getch()
 
         if key == ord('q'):
@@ -235,14 +236,24 @@ class Game:
 
     def game_stats(self, player, game_map, start_time, current_time, enemies, bombs):
         elapsed_time = current_time - start_time
+    
         self.stdscr.addstr(game_map.rows + 1, 0, f"Time Elapsed: {elapsed_time:.2f} seconds")
 
-        self.stdscr.addstr(game_map.rows + 3, 0, f"{player.name}'s Position: ({player.node.row}, {player.node.col})")
-        self.stdscr.addstr(game_map.rows + 4, 0, f"{player.name}'s Lives: {player.lives}")
-        self.stdscr.addstr(game_map.rows + 5, 0, f"{player.name}'s Bombs: {player.max_bombs - len(player.active_bombs)}")
+        # Display Player Stats
+        player_stats_column = [
+            f"{player.name}'s Position: ({player.node.row}, {player.node.col})",
+            f"{player.name}'s Lives: {player.lives}",
+            f"{player.name}'s Bombs: {player.max_bombs - len(player.active_bombs)}"
+        ]
+        for i, stat in enumerate(player_stats_column):
+            self.stdscr.addstr(game_map.rows + 3 + i, 0, stat)
 
-        for i, enemy in enumerate(enemies):
-            self.stdscr.addstr(game_map.rows + 7 + i, 0, f"Enemy {i+1} Lives: {enemy.lives}")
+        # Display Enemies Data
+        enemy_stats_column = [f"Enemy {i+1} Lives: {enemy.lives}" for i, enemy in enumerate(enemies)]
+        for i, stat in enumerate(enemy_stats_column):
+            self.stdscr.addstr(game_map.rows + 3 + i, 30, stat)
 
-        for i, bomb in enumerate(bombs):
-            self.stdscr.addstr(game_map.rows + 8 + len(enemies) + i, 0, f"Bomb {i+1} Position: ({bomb.node.row}, {bomb.node.col})")
+        # Display Bombs Info
+        bomb_info_column = [f"Bomb {i+1} Position: ({bomb.node.row}, {bomb.node.col})" for i, bomb in enumerate(bombs)]
+        for i, info in enumerate(bomb_info_column):
+            self.stdscr.addstr(game_map.rows + 3 + i, 60, info)
